@@ -13,8 +13,8 @@ def assign_forwards():
             session.target = first_alone
             first_alone.target = session
 
-        print(f"[*] Assigned {session.username} to {session.target.username}")
-        print(f"[*] Assigned {first_alone.username} to {first_alone.target.username}")
+            print(f"[*] Assigned {session.username} to {session.target.username}")
+            print(f"[*] Assigned {first_alone.username} to {first_alone.target.username}")
 
 
 def net_init_connection(session):

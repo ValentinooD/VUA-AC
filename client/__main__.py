@@ -13,6 +13,7 @@ def network_init_client_connection(host, port, username, password):
     client.connect((host, port))
 
     if not net_authenticate(client, username, password):
+        print("[!] Authentication failed.")
         client.close()
         return
 

@@ -41,6 +41,7 @@ def destroy_session(session):
 def init_auth(db_path):
     global database_connection
     database_connection = database.DatabaseConnection(db_path)
+    print(f"[*] Using database file {db_path}")
 
 
 def get_crypto_challenge(username):
@@ -71,6 +72,7 @@ def authenticate_client(client_socket):
 
         crypto = get_crypto_challenge(username)
         if crypto is None:
+            client_socket.sendall(packet.AUTH_FAIL_BAD_CREDENTIALS)
             return None
 
         client_socket.sendall(crypto.get_challenge_payload())

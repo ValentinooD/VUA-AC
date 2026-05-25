@@ -4,9 +4,6 @@ import base64
 AUTH_SUCCESS = b"AUTH_SUCCESS"
 AUTH_FAIL = b"AUTH_FAIL"
 
-AUTH_FAIL_INVALID_USER = b"AUTH_FAIL: Invalid user or already logged in."
-AUTH_FAIL_BAD_CREDENTIALS = b"AUTH_FAIL: Bad Credentials"
-
 SERV_MESSAGE_READY = b"READY"
 
 

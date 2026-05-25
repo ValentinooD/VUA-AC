@@ -4,8 +4,7 @@ import socket
 import threading
 import argparse
 
-from authentication import authenticate_client, init_auth, destroy_session, sessions
-import packet
+from authentication import authenticate_client, init_auth, destroy_session
 from server.network import net_init_connection
 
 
@@ -13,7 +12,6 @@ def handle_client(client_socket):
     session = authenticate_client(client_socket)
 
     if not session:
-        session.socket.close()
         return
 
     print(f"[+] User {session.username} has successfully authenticated.")
@@ -26,10 +24,6 @@ def handle_client(client_socket):
             data = session.socket.recv(4096)
             if not data:
                 break
-
-            if session.target is None:
-                session.socket.sendall(packet.SERV_MESSAGE_WAITING_FOR_TARGET)
-                continue
 
             message_str = data.decode('utf-8')
             print(f"[>] {session.username} -> {session.target.username}: {message_str}")

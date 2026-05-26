@@ -7,7 +7,7 @@ AUTH_FAIL = b"AUTH_FAIL"
 SERV_MESSAGE_READY = b"READY"
 
 
-# {"user": "user-a", "pub": "PUBLIC-KEY"}
+# {"user": "user-a", "pub": "PUBLIC-KEY", "identity": "IDENTITY", "signature": "SIGNATURE"}
 class CommunicationContext:
     def __init__(self, json_data=None):
         self.json_data = json_data
@@ -16,9 +16,17 @@ class CommunicationContext:
         if json_data is not None:
             self.user = json_data["user"]
             self.pub = json_data["pub"]
+            self.identity = json_data["identity"]
+            self.signature = json_data["signature"]
 
     def json_str(self):
-        self.json_data = {"user": self.user, "pub": base64.b64encode(self.pub).decode('utf-8')}
+        self.json_data = {
+            "user": self.user,
+            "pub": self.pub,
+            "identity": self.identity,
+            "signature": self.signature
+
+        }
         return json.dumps(self.json_data)
 
 
@@ -33,9 +41,9 @@ class Message:
 
     def json_str(self):
         self.json_data = {
-            "content": base64.b64encode(self.content).decode('utf-8'),
+            "content": self.content,
             "counter": self.counter,
-            "nonce": base64.b64encode(self.nonce).decode('utf-8')
+            "nonce": self.nonce
         }
         return json.dumps(self.json_data)
 

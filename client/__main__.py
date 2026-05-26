@@ -24,7 +24,7 @@ def network_init_client_connection(host, port, username, password):
     # Exchanging context
     my_ctx = crypto.create_communication_ctx(username)
     raw_ctx = net_exchange_comm_ctx(client, my_ctx)
-    comm_ctx = crypto.from_raw_ctx_packet(raw_ctx)
+    comm_ctx = crypto.comm_ctx_from_raw_ctx_packet(raw_ctx)
     crypto.create_shared_secret_from_comm_ctx()
 
     # Waiting for OK

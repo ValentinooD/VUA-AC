@@ -17,6 +17,8 @@ my_counter = 0
 
 shared_secret = None
 session_key = None
+aesgcm_cipher = None
+
 
 def init_crypto():
     global my_private_key, my_public_key, my_public_key_as_bytes
@@ -40,7 +42,7 @@ def create_communication_ctx(username):
     return ctx
 
 
-def from_raw_ctx_packet(data):
+def comm_ctx_from_raw_ctx_packet(data):
     global comm_ctx
 
     json_data = json.loads(data)
@@ -52,7 +54,7 @@ def from_raw_ctx_packet(data):
 
 
 def create_shared_secret_from_comm_ctx():
-    global session_key, shared_secret
+    global session_key, shared_secret, aesgcm_cipher
 
     peer_pub_key = x25519.X25519PublicKey.from_public_bytes(comm_ctx.pub)
     shared_secret = my_private_key.exchange(peer_pub_key)
@@ -63,6 +65,8 @@ def create_shared_secret_from_comm_ctx():
         salt=None,
         info=b"e2ee-session-key",
     ).derive(shared_secret)
+
+    aesgcm_cipher = AESGCM(session_key)
 
     return session_key
 
@@ -78,25 +82,31 @@ def pad_content(msg):
 
 
 def encrypt_message(content):
-    aesgcm = AESGCM(session_key)
-
     msg = pad_content(content.encode('utf-8'))
 
     nonce = os.urandom(12)
-    ciphertext = aesgcm.encrypt(nonce, msg, None)
+    ciphertext = aesgcm_cipher.encrypt(nonce, msg, str(comm_ctx.counter).encode('utf-8'))
 
     return ciphertext, nonce
 
 
 def decrypt_message(raw_json_str):
+    global my_counter
+
     data = json.loads(raw_json_str)
     nonce = base64.b64decode(data['nonce'])
     ciphertext = base64.b64decode(data['content'])
+    counter = int(data['counter'])
 
-    aesgcm = AESGCM(session_key)
+    if counter <= my_counter:
+        print(f"[!] Decryption failed: Replay attack attempted received_counter <= my_counter ({counter} < {my_counter})")
+        return None
+
     try:
-        text = aesgcm.decrypt(nonce, ciphertext, None)
+        text = aesgcm_cipher.decrypt(nonce, ciphertext, str(counter).encode('utf-8'))
         text = text.rstrip(b'\x00') # Remove padding
+
+        my_counter = counter
 
         return text.decode('utf-8')
     except Exception as e:
@@ -105,14 +115,14 @@ def decrypt_message(raw_json_str):
 
 
 def create_message_packet(content):
+    comm_ctx.counter = comm_ctx.counter + 1
+
     cipher, nonce = encrypt_message(content)
 
     msg = packet.Message(None)
     msg.content = cipher
     msg.nonce = nonce
-    msg.counter = comm_ctx.counter + 1
-
-    comm_ctx.counter = comm_ctx.counter + 1
+    msg.counter = comm_ctx.counter
 
     return msg
 
